@@ -1,0 +1,61 @@
+site_name: SensorHarness Docs
+site_description: Documentation for reviewing paper-backed sensor harnesses
+site_url: https://grden.github.io/sensorharness-docs/
+repo_name: grden/sensorharness-docs
+repo_url: https://github.com/grden/sensorharness-docs
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.path
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - toc.follow
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - toc:
+      permalink: true
+      title: On this page
+  - pymdownx.details
+  - pymdownx.superfences
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/toc-sync.js
+
+nav:
+  - Getting Started: index.md
+  - Reviewing a Harness: reviewing/index.md
