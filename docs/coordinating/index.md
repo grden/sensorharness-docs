@@ -77,9 +77,15 @@ Add `--check` to print what moved since the last pull; that is the daily glance.
 
 ## The Project board
 
-One GitHub Project, linked to the code repository so it appears under its
-Projects tab. It is created and kept in sync by a script; the views are set once
-in the browser.
+One GitHub Project holding every review issue. It is created and kept in sync by
+a script; the views are set once in the browser.
+
+Until the repository moves to an organization, the board lives under the
+coordinator's account: GitHub only lets a user-owned project link to that user's
+own repositories, so it does not appear under the code repository's Projects
+tab. Share the board URL directly (pin it in Slack and in the issue template).
+When an organization exists, re-run the script with `--owner <org>` and the
+board is rebuilt there in one pass.
 
 ```bash
 python scripts/review/setup_project.py --owner <account> --repo diamond264/sensorharness
