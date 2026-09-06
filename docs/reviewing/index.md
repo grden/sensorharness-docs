@@ -1,162 +1,158 @@
 # Reviewing a Harness
 
 A harness review checks whether an implementation faithfully reproduces the
-procedure described in its source paper. It is primarily a **paper-to-code
-fidelity review**, not a code-style review.
+procedure described in its source paper. It is a **paper-to-code fidelity
+review**, not a code-style review.
 
 The implementation is an AI-generated draft. The paper is the authority. Your
-review determines which parts of the implementation agree with the paper,
-which parts need correction, and which parts require discussion.
+job is to compare the two and record what you found.
 
 ## What you review
 
-Use the scope in your assigned GitHub Issue. A typical assignment names both:
+Your GitHub Issue names two files:
 
-- an **interface**, which owns the reusable information and control flow; and
-- a **reference harness**, which supplies paper-specific hooks and constants.
+- an **interface** (`harnesses/<interface_id>/interface.py`), which owns the
+  reusable algorithm — inputs, preprocessing, prompt construction, model calls,
+  output handling; and
+- a **reference harness** (`harnesses/<interface_id>/references/<reference_id>/harness.py`),
+  which supplies the paper-specific hooks and constants.
 
-For example, the current ECG diagnosis assignment covers:
+For example:
 
 ```text
-harnesses/clinical_context_sensor_image_qa/interface.py
-harnesses/clinical_context_sensor_image_qa/references/
-  gunay_2025__ecg_diagnosis/harness.py
+harnesses/clinical_context_sensor_image_qa/interface.py                                    (208 lines)
+harnesses/clinical_context_sensor_image_qa/references/gunay_2025__ecg_diagnosis/harness.py  (22 lines)
 ```
-
-The corresponding paper of record is *Comparing DeepSeek and GPT-4o in ECG
-interpretation: Is AI improving over time?* Review the exact paper linked in the
-issue, including relevant supplementary material when the issue provides it.
 
 Do not assume that the shorter reference file is the only code under review.
-The reference inherits behavior from the interface, so inputs, preprocessing,
-prompt construction, model calls, and output handling may be implemented in
-the interface.
+The reference inherits behavior from the interface, so most of what the paper
+describes is implemented in the interface. Read both.
 
-## Review workflow
+The issue also lists the interface's **mechanisms** from its `card.yaml` — short
+labels such as `representation.visualization` or `context.expert_knowledge`.
+They tell you what kind of harness this is before you open the code.
 
-### 1. Orient from the issue
+## The checklist
 
-Before reviewing, identify:
+Your issue carries seven checkboxes. Tick each one after you have compared the
+paper and the code for that item. Together they walk the inference path from
+sensor to answer.
 
-- the paper and any supplementary sources;
-- every implementation file in scope;
-- the expected `review.yaml` path; and
-- the GitHub Issue number.
+### 1. Inputs
 
-Ask for clarification when these do not agree. For this prototype, references
-to a “machine report” are treated as references to the paper of record; the
-team will confirm that terminology separately.
+What the code expects to receive: which sensor streams, in what units, at what
+sampling rate, over what window. Check these against the paper's data
+description. Look for the stream names the interface reads, any assumed shape
+(`[samples]` or `[samples, channels]`), and any hard-coded rate or window.
 
-### 2. Map the paper to the implementation
+### 2. Preprocessing
 
-Read the paper sections that describe the implemented procedure. Depending on
-the paper, relevant checks may include:
+Everything the code does to the signal before the model sees it: filtering,
+resampling, normalization, feature extraction, rendering to an image,
+serialization to text. Check that each step is one the paper describes and that
+the order matches. A step the paper does not mention, or one it mentions that is
+missing, is a finding.
 
-- model inputs and sensor representation;
-- prompt or task formulation;
-- preprocessing and sampling;
-- examples, retrieval, tools, or other context;
-- model-call order and generation settings;
-- output parsing and validation;
-- evaluation procedures and metrics;
-- steps omitted from the implementation; and
-- behavior or assumptions not supported by the paper.
+### 3. Prompt & context
 
-Separate the paper's inference-time procedure from training, dataset
-construction, human evaluation, and study-level analysis. If it is unclear
-whether something belongs in a SensorHarness runtime, record the uncertainty
-rather than silently inventing behavior.
+What the model actually sees: the task wording, the label set, worked examples,
+expert knowledge, retrieved records, role instructions, output-format
+instructions. Compare with the paper's prompt figures or appendix. Check how
+examples are chosen if the paper is specific about it.
 
-### 3. Record a verdict and paper anchor
+### 4. Model calls & parsing
 
-For every material check, record the relevant Section, Figure, or Table and
-choose one verdict:
+How many times the model is called, in what order, with what generation
+settings (temperature, max tokens, stop conditions), whether there are loops or
+voting, and how the reply is parsed into the final answer. Check each against
+the paper's method section.
+
+### 5. Fixed values
+
+Constants the paper states explicitly — sampling rates, thresholds, shot counts,
+decimal precision, window lengths, band edges. Find each one in the code and
+confirm the value. These are the most common place for a silent mismatch.
+
+### 6. Differences handled
+
+Anything from steps 1–5 that did not match is either **fixed in your pull
+request** or **explained in the record's `note`**. A difference is fine when
+there is a reason (the resource is unavailable, the step is outside what a
+runtime harness can do); it just has to be written down.
+
+### 7. Record + PR
+
+Generate the review record and open the pull request. See below.
+
+## Verdict
+
+Two options:
 
 `confirmed`
-: The reviewer finds no problem in how the harness implements the cited paper
-  behavior.
+: You compared the paper and the code and changed nothing.
 
-`refuted`
-: The reviewer finds a problem in the harness implementation. The harness needs
-  a correction.
+`updated`
+: You changed something in this pull request. Say what in the `note`, or let
+  the diff speak.
 
-`cannot-judge`
-: The available evidence is not sufficient for a confident decision, or the
-  item requires discussion about terminology, uncertainty, or SensorHarness
-  scope.
+Not sure whether something is a problem, or whether a paper step belongs in a
+runtime harness at all? **Ask in Slack.** Then write the conclusion in the pull
+request so the next person can find it.
 
-The anchor should let another reviewer locate the evidence without repeating
-your entire search. Add a short explanation connecting that evidence to the
-code.
+Paper anchors (a section, figure, or table) are welcome in the `note` when they
+help the next reader. They are not required.
 
-### 4. Make a complete pass
+## The review record
 
-Do not stop after checking an existing list. Review the scoped implementation
-for mismatches, missing behavior, and unsupported assumptions that have not yet
-been raised.
-
-Record that this pass was completed. If it produces no additional findings,
-state that explicitly rather than leaving the section blank.
-
-### 5. Correct problems where possible
-
-Correct `refuted` behavior in the same pull request and add or update focused
-tests when the changed behavior can regress.
-
-If an item cannot be corrected, use the classification requested by the issue
-and include a reason:
-
-`recorded-deviation`
-: Use when a known difference must remain recorded rather than being corrected
-  in the current contribution.
-
-`out-of-runtime-scope`
-: Use when the paper behavior is outside the inference-time boundary that
-  SensorHarness represents.
-
-When neither description clearly fits, use `cannot-judge` and ask the team
-instead of forcing a classification.
-
-### 6. Add `review.yaml`
-
-Place `review.yaml` beside the reviewed reference harness, as specified by the
-assignment:
+One file per reference, at the repository root:
 
 ```text
-harnesses/<interface_id>/references/<reference_id>/review.yaml
+reviews/<interface_id>/<reference_id>.yaml
 ```
 
-This file records who performed the review and how the implementation was
-checked. The eventual format needs to capture the reviewed scope, verdicts,
-paper anchors, code corrections, and reasons for unresolved items.
+Not beside `harness.py`. A reference directory holds exactly `harness.py` and
+`reference.yaml` — the protocol allows no other file there — so review records
+mirror the tree from a sibling root.
 
-The schema has not yet been finalized. Do not invent fields or copy an
-unapproved example; obtain the current format from the project coordinator.
+Generate it; do not type it by hand:
 
-### 7. Open the pull request
+```bash
+python scripts/review/new_review.py <interface_id>/<reference_id> \
+    --reviewer <your github handle> --verdict confirmed
+```
 
-Include the completed review record, code corrections, and relevant tests in
-one pull request. Add the issue-closing line to the pull request description:
+Add `--note "..."` if you have something to say, and `--verdict updated` if you
+changed code. The script writes the date and the hashes of the two files you
+read, so a later change to either file makes the record visibly stale.
+
+The exact fields are documented in the code repository at
+[`docs/REVIEWING.md`](https://github.com/diamond264/sensorharness/blob/main/docs/REVIEWING.md).
+
+## Pull request and second review
+
+Open one pull request per issue containing the record and any code change.
+Put this line in the description so the issue closes on merge:
 
 ```text
 Closes #<issue-number>
 ```
 
-A code change is not merged automatically. Complete the assigned checklist and
-wait for a second reviewer to confirm the pull request before merge. The exact
-second-review checklist and how approval is recorded are still being defined.
+A second person approves before merge. They read your record and your diff —
+not the paper again — and check that every difference you found has either a
+fix or a reason. One approval is enough.
 
 ## Where information belongs
 
 | Information | Home |
 | --- | --- |
 | Reviewer assignment and project-wide status | Project spreadsheet |
-| Reusable review instructions | This documentation |
-| Paper, files, and deliverable for one assignment | GitHub Issue |
-| Per-reference review record | `review.yaml` |
+| How to review | This documentation |
+| Paper, files, and checklist for one assignment | GitHub Issue |
+| Per-reference review record | `reviews/<interface_id>/<reference_id>.yaml` |
+| Record format | [`docs/REVIEWING.md`](https://github.com/diamond264/sensorharness/blob/main/docs/REVIEWING.md) in the code repository |
 | Corrections, discussion, and approval | Pull request |
 | Questions and quick coordination | Slack |
 
 When a Slack discussion changes the interpretation of the paper or the code,
-record the conclusion in the issue, pull request, or `review.yaml` so future
-contributors can find it.
+record the conclusion in the issue or pull request so future contributors can
+find it.
