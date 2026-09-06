@@ -16,7 +16,7 @@ AI-generated harness
     ↓
 Human review and corrections
     ↓
-review.yaml and pull request
+Review record and pull request
     ↓
 Second review and merge
 ```
@@ -29,9 +29,9 @@ is expected to reproduce faithfully.
 
 Review assignments are tracked in GitHub Issues. Your issue identifies:
 
-- the paper of record;
+- the paper;
 - the interface and reference implementation in scope;
-- the expected location of `review.yaml`; and
+- a seven-box checklist and the path of the review record; and
 - the issue number your pull request should close.
 
 Read the [Reviewing a Harness](reviewing/index.md) guide before editing code. If
@@ -50,8 +50,10 @@ harnesses/<interface_id>/
 ├── card.yaml
 └── references/<reference_id>/
     ├── harness.py
-    ├── reference.yaml
-    └── review.yaml        # added by the reviewer
+    └── reference.yaml
+
+reviews/<interface_id>/
+└── <reference_id>.yaml        # added by the reviewer
 ```
 
 `interface.py`
@@ -66,9 +68,13 @@ harnesses/<interface_id>/
 : Identifies the source paper and the modalities and tasks demonstrated by that
   reference.
 
-`review.yaml`
-: Records the human paper-to-code review. Its schema is still being finalized;
-  use the format supplied by the project coordinator for your assigned review.
+`reviews/<interface_id>/<reference_id>.yaml`
+: Records the human paper-to-code review: who, when, `confirmed` or `updated`,
+  an optional note, and the hashes of the two files read. It lives outside the
+  reference directory because the protocol allows only `harness.py` and
+  `reference.yaml` there. Generate it with `scripts/review/new_review.py`; the
+  fields are documented in
+  [`docs/REVIEWING.md`](https://github.com/diamond264/sensorharness/blob/main/docs/REVIEWING.md).
 
 The issue defines the exact scope. Review both files when both the interface and
 reference are listed: a paper-fidelity problem can be in shared interface

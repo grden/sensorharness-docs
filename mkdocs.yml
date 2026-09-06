@@ -59,3 +59,4 @@ extra_javascript:
 nav:
   - Getting Started: index.md
   - Reviewing a Harness: reviewing/index.md
+  - Coordinating the Review: coordinating/index.md
