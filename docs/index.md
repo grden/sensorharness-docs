@@ -92,9 +92,3 @@ documentation file changes.
 This prototype currently documents the harness-review workflow only. Broader
 contribution guidance will be added before the project opens to external
 contributors.
-
-!!! note "Research software"
-
-    SensorHarness is not a medical device or a substitute for clinical
-    judgment. Keep private data, credentials, and held-out labels out of model
-    requests unless an experiment explicitly authorizes their use.
