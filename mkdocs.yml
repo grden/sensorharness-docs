@@ -1,8 +1,8 @@
 site_name: SensorHarness Docs
 site_description: Documentation for reviewing paper-backed sensor harnesses
 site_url: https://grden.github.io/sensorharness-docs/
-repo_name: grden/sensorharness-docs
-repo_url: https://github.com/grden/sensorharness-docs
+repo_name: diamond264/sensorharness
+repo_url: https://github.com/diamond264/sensorharness
 
 theme:
   name: material
