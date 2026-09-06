@@ -75,6 +75,40 @@ unit automatically.
 
 Add `--check` to print what moved since the last pull; that is the daily glance.
 
+## The Project board
+
+One GitHub Project, linked to the code repository so it appears under its
+Projects tab. It is created and kept in sync by a script; the views are set once
+in the browser.
+
+```bash
+python scripts/review/setup_project.py --owner <account> --repo diamond264/sensorharness
+```
+
+The script is safe to re-run: it finds the project if it exists, adds only the
+fields and issues that are missing, and rewrites each item's fields from the
+issue's labels.
+
+| Field | Values | Source |
+| --- | --- | --- |
+| Status | Todo · In Progress · Done | assigned → In Progress; PR merged → Done |
+| Wave | 0 · 1 · 2 · 3 | `wave:*` label |
+| Domain | cardiac · eeg-sleep · imu · physio · ambient · multimodal · triage | `domain:*` label |
+| Size | S · M · L | `size:*` label |
+| Second reader | text | filled at approval |
+| Minutes | number | optional, from the reviewer |
+
+Views to add once (Project → **+ New view**):
+
+1. **Board** — layout Board, column field Status.
+2. **By reviewer** — layout Table, group by Assignees, sort by Wave. This is
+   the one-screen answer to "who is holding what".
+3. **By domain** — layout Table, group by Domain, show Size and Status.
+
+Workflows to enable once (Project → **⋯ → Workflows**): *Item closed → Done*
+and *Pull request merged → Done*. With those on, the only column moved by hand
+is Todo → In Progress, and `assign_issues.py` does that through the assignee.
+
 ## Rules of thumb for the round
 
 - Start with a small batch (three units, several reviewers each) before opening
