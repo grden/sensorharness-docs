@@ -1,94 +1,137 @@
 # Getting Started
 
-SensorHarness is a research codebase for representing, comparing, and
-optimizing how language models and agents solve sensing tasks. Its harnesses
-capture the inference-time procedure around a model: how sensor evidence is
-prepared, what context the model receives, how the model is called, and how its
-answer is interpreted.
+## What is SensorHarness?
 
-The current contributor workflow turns AI-generated implementations into
-reviewed, paper-backed code:
+SensorHarness is a research codebase for representing, comparing, and
+optimizing the ways language models and agents solve sensing tasks. It builds on
+Stanford IRIS Lab's
+[Meta-Harness](https://github.com/stanford-iris-lab/meta-harness) and adds a
+sensor-specific domain contract, typed resource resolution, and a
+paper-derived harness corpus.
+
+In this project, a **harness** is the inference-time procedure around one or
+more language or multimodal models. It controls how sensor observations are
+processed or represented, what examples, knowledge, retrieval results, or tools
+are provided, how models are called, and how the answer is parsed.
+
+The paper-derived corpus stores reusable interfaces and paper-backed reference
+implementations. The optimizer can retrieve these designs and specialize them
+for a new sensing task.
+
+## Project structure
+
+The repository separates framework code, paper-backed harnesses, experiments,
+and tests:
 
 ```text
-Source paper
-    ↓
-AI-generated harness
-    ↓
-Human review and corrections
-    ↓
-review.yaml and pull request
-    ↓
-Second review and merge
+sensorharness/
+├── src/sensor_harness/   # Runtime types, loading, resources, and optimization
+├── harnesses/           # Reusable interfaces and paper-backed references
+├── experiments/         # Task definitions, configurations, and evaluators
+├── tests/               # Automated tests
+└── docs/                # Technical documentation in the code repository
 ```
 
-An implementation can be both **AI-generated** and **paper-backed**. The first
-term describes how its draft was produced; the second describes the evidence it
-is expected to reproduce faithfully.
+### Framework
 
-## Start with your assignment
+`src/sensor_harness/` provides the common runtime. It defines sensor inputs,
+harness outputs, model and resource contracts, file loading, validation, and the
+optimization workflow.
 
-Review assignments are tracked in GitHub Issues. Your issue identifies:
+### Harness corpus
 
-- the paper of record;
-- the interface and reference implementation in scope;
-- the expected location of `review.yaml`; and
-- the issue number your pull request should close.
-
-Read the [Reviewing a Harness](reviewing/index.md) guide before editing code. If
-the paper, scope, or expected deliverable is missing or unclear, ask in Slack so
-the assignment can be clarified in GitHub. Important decisions should not live
-only in chat.
-
-## How the relevant files fit together
-
-An assigned review commonly spans an interface and one paper-specific
-reference:
+`harnesses/` contains inference procedures derived from research papers. Each
+top-level folder represents one reusable algorithm:
 
 ```text
 harnesses/<interface_id>/
-├── interface.py
 ├── card.yaml
+├── interface.py
 └── references/<reference_id>/
-    ├── harness.py
     ├── reference.yaml
-    └── review.yaml        # added by the reviewer
+    └── harness.py
 ```
 
-`interface.py`
-: Owns reusable behavior such as input checks, preprocessing, prompt assembly,
-  model calls, and output handling.
+The four files have different purposes:
 
-`harness.py`
-: Supplies the narrow paper- or task-specific hooks and reported constants for
-  one reference.
+`card.yaml`
+: Briefly describes the reusable algorithm and names its main mechanisms.
+
+`interface.py`
+: Implements the reusable algorithm, including its processing steps, prompt
+  construction, model calls, and output handling.
 
 `reference.yaml`
-: Identifies the source paper and the modalities and tasks demonstrated by that
-  reference.
+: Identifies one source paper and records the sensor modalities and tasks that
+  the paper demonstrated. This is metadata, not executable code.
 
-`review.yaml`
-: Records the human paper-to-code review. Its schema is still being finalized;
-  use the format supplied by the project coordinator for your assigned review.
+`harness.py`
+: Supplies the paper-specific details required by the interface, such as fixed
+  constants or sensor preparation rules.
 
-The issue defines the exact scope. Review both files when both the interface and
-reference are listed: a paper-fidelity problem can be in shared interface
-behavior or in a reference-specific choice.
+One interface folder can contain several references. They use the same general
+algorithm from `interface.py` but provide different paper- or task-specific
+details in their own `harness.py` files.
 
-## Run the documentation locally
+### Experiments
 
-From the documentation repository root:
+`experiments/` defines the target tasks used to evaluate and optimize harnesses.
+An experiment specifies the available data and resources, evaluation rules, run
+configuration, and metrics. These task-specific rules do not belong in the
+paper corpus.
+
+## Runtime interface
+
+Every concrete harness follows the same basic API:
+
+```python
+output = harness.run(
+    SensorInput(
+        sensor_data=sensor_record,
+        task="Classify the activity.",
+    )
+)
+
+print(output.status)
+print(output.prediction)
+```
+
+`SensorInput` contains the sensor data and the task for one example.
+`HarnessOutput` contains the prediction and a status describing whether the run
+completed or failed during input validation, model execution, or output parsing.
+
+A harness may require models, retrievers, example pools, or other external
+resources. These resources are supplied when the harness is constructed rather
+than loaded secretly during `run()`.
+
+## Install the project
+
+SensorHarness requires Python 3.11 or newer. From the repository root:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-mkdocs serve
+python -m pip install -e '.[dev]'
 ```
 
-Open the local address printed by MkDocs. The development server reloads when a
-documentation file changes.
+On Windows PowerShell, activate the environment with:
 
-This prototype currently documents the harness-review workflow only. Broader
-contribution guidance will be added before the project opens to external
-contributors.
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+## Run the tests
+
+Run the full test suite and static checks from the repository root:
+
+```bash
+python -m pytest
+ruff check .
+```
+
+Individual experiments have their own data and model requirements. Read the
+README inside the relevant `experiments/<name>/` folder before running one.
+
+To compare a paper with its harness implementation, continue to
+[Reviewing a Harness](reviewing/index.md).

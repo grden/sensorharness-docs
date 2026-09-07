@@ -1,162 +1,245 @@
 # Reviewing a Harness
 
-A harness review checks whether an implementation faithfully reproduces the
-procedure described in its source paper. It is primarily a **paper-to-code
-fidelity review**, not a code-style review.
+The purpose of a harness review is to answer one question:
 
-The implementation is an AI-generated draft. The paper is the authority. Your
-review determines which parts of the implementation agree with the paper,
-which parts need correction, and which parts require discussion.
+> Does this code perform the inference procedure described in the source paper?
 
-## What you review
+This is a paper-to-code accuracy review. The paper and its official code or
+supplementary material describe the intended behavior. The SensorHarness files
+show what was implemented.
 
-Use the scope in your assigned GitHub Issue. A typical assignment names both:
+## What to review
 
-- an **interface**, which owns the reusable information and control flow; and
-- a **reference harness**, which supplies paper-specific hooks and constants.
-
-For example, the current ECG diagnosis assignment covers:
+Start from your assigned GitHub Issue. It names the paper and the files in
+scope. A typical assignment covers these four files:
 
 ```text
-harnesses/clinical_context_sensor_image_qa/interface.py
-harnesses/clinical_context_sensor_image_qa/references/
-  gunay_2025__ecg_diagnosis/harness.py
+harnesses/<interface_id>/
+├── card.yaml
+├── interface.py
+└── references/<reference_id>/
+    ├── reference.yaml
+    └── harness.py
 ```
 
-The corresponding paper of record is *Comparing DeepSeek and GPT-4o in ECG
-interpretation: Is AI improving over time?* Review the exact paper linked in the
-issue, including relevant supplementary material when the issue provides it.
+`interface.py` often contains most of the implementation. It is used by all
+references inside that interface folder. The selected reference's `harness.py`
+adds only the details specific to the paper or task. Review both Python files,
+even when `harness.py` is short.
 
-Do not assume that the shorter reference file is the only code under review.
-The reference inherits behavior from the interface, so inputs, preprocessing,
-prompt construction, model calls, and output handling may be implemented in
-the interface.
+You do not need to create a branch or fork before reading the paper and checking
+the files. What you do afterward depends on whether you find anything to change.
 
-## Review workflow
+## Review in this order
 
-### 1. Orient from the issue
+### 1. Check the cards
 
-Before reviewing, identify:
-
-- the paper and any supplementary sources;
-- every implementation file in scope;
-- the expected `review.yaml` path; and
-- the GitHub Issue number.
-
-Ask for clarification when these do not agree. For this prototype, references
-to a “machine report” are treated as references to the paper of record; the
-team will confirm that terminology separately.
-
-### 2. Map the paper to the implementation
-
-Read the paper sections that describe the implemented procedure. Depending on
-the paper, relevant checks may include:
-
-- model inputs and sensor representation;
-- prompt or task formulation;
-- preprocessing and sampling;
-- examples, retrieval, tools, or other context;
-- model-call order and generation settings;
-- output parsing and validation;
-- evaluation procedures and metrics;
-- steps omitted from the implementation; and
-- behavior or assumptions not supported by the paper.
-
-Separate the paper's inference-time procedure from training, dataset
-construction, human evaluation, and study-level analysis. If it is unclear
-whether something belongs in a SensorHarness runtime, record the uncertainty
-rather than silently inventing behavior.
-
-### 3. Record a verdict and paper anchor
-
-For every material check, record the relevant Section, Figure, or Table and
-choose one verdict:
-
-`confirmed`
-: The reviewer finds no problem in how the harness implements the cited paper
-  behavior.
-
-`refuted`
-: The reviewer finds a problem in the harness implementation. The harness needs
-  a correction.
-
-`cannot-judge`
-: The available evidence is not sufficient for a confident decision, or the
-  item requires discussion about terminology, uncertainty, or SensorHarness
-  scope.
-
-The anchor should let another reviewer locate the evidence without repeating
-your entire search. Add a short explanation connecting that evidence to the
-code.
-
-### 4. Make a complete pass
-
-Do not stop after checking an existing list. Review the scoped implementation
-for mismatches, missing behavior, and unsupported assumptions that have not yet
-been raised.
-
-Record that this pass was completed. If it produces no additional findings,
-state that explicitly rather than leaving the section blank.
-
-### 5. Correct problems where possible
-
-Correct `refuted` behavior in the same pull request and add or update focused
-tests when the changed behavior can regress.
-
-If an item cannot be corrected, use the classification requested by the issue
-and include a reason:
-
-`recorded-deviation`
-: Use when a known difference must remain recorded rather than being corrected
-  in the current contribution.
-
-`out-of-runtime-scope`
-: Use when the paper behavior is outside the inference-time boundary that
-  SensorHarness represents.
-
-When neither description clearly fits, use `cannot-judge` and ask the team
-instead of forcing a classification.
-
-### 6. Add `review.yaml`
-
-Place `review.yaml` beside the reviewed reference harness, as specified by the
-assignment:
+Open the following files for the assigned interface and reference:
 
 ```text
-harnesses/<interface_id>/references/<reference_id>/review.yaml
+harnesses/<interface_id>/card.yaml
+harnesses/<interface_id>/references/<reference_id>/reference.yaml
 ```
 
-This file records who performed the review and how the implementation was
-checked. The eventual format needs to capture the reviewed scope, verdicts,
-paper anchors, code corrections, and reasons for unresolved items.
+Then read the paper's abstract and method overview.
 
-The schema has not yet been finalized. Do not invent fields or copy an
-unapproved example; obtain the current format from the project coordinator.
+The two files describe different things:
 
-### 7. Open the pull request
+- `card.yaml` describes the general algorithm implemented by `interface.py`.
+- `reference.yaml` identifies the selected paper and describes what that paper
+  demonstrated.
 
-Include the completed review record, code corrections, and relevant tests in
-one pull request. Add the issue-closing line to the pull request description:
+For `card.yaml`, check that the paper uses the stated general algorithm. Every
+`mechanisms` label should be supported by the paper, and the card should not
+omit a major inference step.
+
+For `reference.yaml`, check that:
+
+- the paper title and link are correct;
+- the description accurately summarizes this implementation;
+- the modalities match the paper's sensor inputs; and
+- the tasks match what the paper asks the model to do.
+
+The YAML files are short descriptions. The Python files contain the behavior
+that actually runs. Compare both the descriptions and the executable behavior
+with the paper.
+
+### 2. Check the inputs
+
+Check whether the harness receives the same input described in the paper.
+
+#### Sensor data
+
+Identify the sensor data or representation used by the paper. Note how it is
+prepared and whether it requires a particular format, sampling rate,
+resolution, or window length.
+
+Check that `reference.yaml` describes the modality correctly. Then use
+`interface.py` and the selected `harness.py` to trace how the expected data
+enters through `SensorInput.sensor_data` or a constructor resource and how it is
+processed. Assuming the paper's expected input is supplied, the implemented
+processing should match the paper.
+
+Dataset loading, recording segmentation, and label assignment may happen
+before the harness runs. Do not treat them as missing unless the paper requires
+them during inference.
+
+#### Task
+
+Identify the task that the paper asks the model to perform. Check that
+`reference.yaml.tasks` describes it correctly.
+
+Then trace how `SensorInput.task` is used in `interface.py` and `harness.py`.
+The code should preserve the runtime question, context, or answer choices rather
+than replace them with an unrelated hard-coded task. Fixed wording may remain in
+the paper-specific `harness.py` when the paper requires it.
+
+### 3. Check the expected answer
+
+Check whether the harness returns the same kind of answer described in the
+paper. The expected answer may be free text, one label, JSON, a number, or a
+sequence.
+
+In `interface.py` and `harness.py`, check:
+
+- what answer format the model is asked to produce;
+- whether paper-specific role text, answer choices, and output rules are
+  preserved;
+- how the response is parsed; and
+- whether the inherited `run()` returns the result as a `HarnessOutput`.
+
+If the code introduces an exact output format or parser that the paper does not
+specify, treat it as an implementation adaptation rather than a paper-defined
+step.
+
+### 4. Check the mechanisms in the code
+
+Check whether the steps that turn the input into the answer match the paper.
+For every `mechanisms` label in `card.yaml`, find the corresponding logic in
+`interface.py`:
+
+```text
+sensor representation or preprocessing
+    ↓
+context and prompt construction
+    ↓
+model or tool call(s)
+    ↓
+output parsing and handling
+```
+
+Compare the major steps, their order, the number of calls, and important fixed
+values with the paper. Use the selected `harness.py` to check paper-specific
+hooks and constants.
+
+Models, example pools, retrievers, knowledge bases, checkpoints, and tools are
+external resources. If the procedure needs one, the harness should receive it
+through its constructor rather than secretly downloading it or replacing it
+with an unrelated hard-coded value.
+
+If the inference flow differs substantially from the paper, record the
+difference. The reference may need code corrections or may belong to a different
+interface.
+
+## After the review
+
+### If no changes are needed
+
+Add a comment to the assigned Issue stating that the review is complete and no changes are
+needed.
+
+For example:
+
+```text
+Review complete. The implementation matches the paper, looks good to me!
+```
+
+### If changes are needed
+
+Fix clear mismatches. If a difference is intentional, leave it unchanged and
+briefly explain why by creating a short Markdown review at the path given in the Issue, normally:
+
+```text
+reviews/<interface_id>/<reference_id>.md
+```
+
+Briefly state:
+
+- the overall conclusion;
+- what you changed and why; and
+- what you intentionally did not change and why.
+
+Include the code correction and review file in a pull request. Write the PR description and add:
 
 ```text
 Closes #<issue-number>
 ```
 
-A code change is not merged automatically. Complete the assigned checklist and
-wait for a second reviewer to confirm the pull request before merge. The exact
-second-review checklist and how approval is recorded are still being defined.
+Replace `<issue-number>` with the assigned Issue number. For example,
+`Closes #42` links the PR to Issue 42 and closes it automatically after the PR
+is merged.
 
-## Where information belongs
+## Fork, clone, and open a pull request
 
-| Information | Home |
-| --- | --- |
-| Reviewer assignment and project-wide status | Project spreadsheet |
-| Reusable review instructions | This documentation |
-| Paper, files, and deliverable for one assignment | GitHub Issue |
-| Per-reference review record | `review.yaml` |
-| Corrections, discussion, and approval | Pull request |
-| Questions and quick coordination | Slack |
+Follow these steps when the review finds something to change.
 
-When a Slack discussion changes the interpretation of the paper or the code,
-record the conclusion in the issue, pull request, or `review.yaml` so future
-contributors can find it.
+### 1. Fork the repository
+
+Open the SensorHarness repository on GitHub and select **Fork**. GitHub creates a
+copy under your account.
+
+If the **Fork** button is unavailable, ask the project administrator. Private
+repository settings may prevent forking.
+
+### 2. Clone your fork
+
+On your fork's GitHub page, select **Code** and copy its HTTPS URL. In a terminal,
+run:
+
+```bash
+git clone https://github.com/<your-username>/sensorharness.git
+cd sensorharness
+```
+
+Replace `<your-username>` with your GitHub username.
+
+### 3. Create a branch
+
+Create a branch for the review changes:
+
+```bash
+git switch -c review/<reference-id>
+```
+
+Replace `<reference-id>` with the reference named in the Issue.
+
+### 4. Save and push the changes
+
+After editing the files, check what changed:
+
+```bash
+git status
+git diff
+```
+
+Stage and commit the intended files:
+
+```bash
+git add <changed-files>
+git commit -m "Review <reference-id> against paper"
+git push -u origin review/<reference-id>
+```
+
+Replace the placeholders with the actual file paths and reference ID.
+
+### 5. Open the pull request
+
+Return to your fork on GitHub. Select **Compare & pull request** for the branch
+you pushed. Confirm that the pull request targets the `main` branch of the
+original SensorHarness repository.
+
+Briefly describe the result and include `Closes #<issue-number>` in the PR
+description. Submit the pull request for review.
+
+If repository access, project policy, or the expected correction is unclear,
+ask in the project Slack channel before submitting the change.
