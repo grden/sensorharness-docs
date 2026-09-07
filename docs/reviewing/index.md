@@ -5,130 +5,102 @@ procedure described in its source paper. It is a **paper-to-code fidelity
 review**, not a code-style review.
 
 The implementation is an AI-generated draft. The paper is the authority. Your
-job is to compare the two and record what you found.
+job is to compare the two and record what you found. You do not need to know
+the paper beforehand: the checklist is ordered so that each step tells you what
+to open, what to read, and what to compare.
 
 ## What you review
 
-Your GitHub Issue names two files:
+Your GitHub Issue names the package. Four files matter, from most abstract to
+most concrete:
 
-- an **interface** (`harnesses/<interface_id>/interface.py`), which owns the
-  reusable algorithm — inputs, preprocessing, prompt construction, model calls,
-  output handling; and
-- a **reference harness** (`harnesses/<interface_id>/references/<reference_id>/harness.py`),
-  which supplies the paper-specific hooks and constants.
+| File | What it is | Steps |
+| --- | --- | --- |
+| `harnesses/<interface_id>/card.yaml` | One paragraph and a few mechanism labels describing the reusable algorithm | 1 |
+| `harnesses/<interface_id>/references/<reference_id>/reference.yaml` | The paper this reference reproduces, and the modalities and tasks it demonstrated | 1 |
+| `harnesses/<interface_id>/interface.py` | The shared algorithm — inputs, preprocessing, prompt construction, model calls, output handling | 2 – 4 |
+| `harnesses/<interface_id>/references/<reference_id>/harness.py` | The paper-specific hooks and constants | 2 – 4 |
 
-For example:
-
-```text
-harnesses/clinical_context_sensor_image_qa/interface.py                                    (208 lines)
-harnesses/clinical_context_sensor_image_qa/references/gunay_2025__ecg_diagnosis/harness.py  (22 lines)
-```
-
-Do not assume that the shorter reference file is the only code under review.
-The reference inherits behavior from the interface, so most of what the paper
-describes is implemented in the interface. Read both.
-
-The issue also lists the interface's **mechanisms** from its `card.yaml` — short
-labels such as `representation.visualization` or `context.expert_knowledge`.
-They tell you what kind of harness this is before you open the code.
+Do not assume that the shorter `harness.py` is the only code under review. The
+reference inherits behavior from the interface, so most of what the paper
+describes is implemented in `interface.py`.
 
 ## The checklist
 
-Your issue carries seven checkboxes. Tick each one after you have compared the
-paper and the code for that item. Together they walk the inference path from
-sensor to answer.
+Go top-down: cards first, code last. Tick a box after you have compared the
+paper and the file it names. Stopping after step 3 still produces a useful
+partial review; say so in the record.
 
-### 1. Inputs
+### 1. Cards
 
-What the code expects to receive: which sensor streams, in what units, at what
-sampling rate, over what window. Check these against the paper's data
-description. Look for the stream names the interface reads, any assumed shape
-(`[samples]` or `[samples, channels]`), and any hard-coded rate or window.
+Open `card.yaml` and `reference.yaml`. Read the paper's abstract and the
+overview of its method.
 
-### 2. Preprocessing
+- The card's `description` and every `mechanisms` label describe what this
+  paper actually does. Two failure modes: a label the paper does not support
+  (invented), or a major step of the paper that no label covers (missing).
+- The reference card's paper title and link are right. Its `modalities` and
+  `tasks` are exactly what the paper demonstrated — no extra modality the paper
+  never used, no task it never evaluated.
 
-Everything the code does to the signal before the model sees it: filtering,
-resampling, normalization, feature extraction, rendering to an image,
-serialization to text. Check that each step is one the paper describes and that
-the order matches. A step the paper does not mention, or one it mentions that is
-missing, is a finding.
+### 2. Inputs
 
-### 3. Prompt & context
+Find the paper's data or experimental-setup section: which signals, in what
+units, at what sampling rate, over what window. Then find where `interface.py`
+and `harness.py` read the streams — the stream names, any assumed shape
+(`[samples]` or `[samples, channels]`), any hard-coded rate or window. Same
+signals, rate and window, or a written reason why not.
 
-What the model actually sees: the task wording, the label set, worked examples,
-expert knowledge, retrieved records, role instructions, output-format
-instructions. Compare with the paper's prompt figures or appendix. Check how
-examples are chosen if the paper is specific about it.
+### 3. Task & answer
 
-### 4. Model calls & parsing
+The task wording, the label set, and the answer format the model is asked for
+match the paper's setup. Check the prompt text the interface builds against the
+paper's task description or prompt figure.
 
-How many times the model is called, in what order, with what generation
-settings (temperature, max tokens, stop conditions), whether there are loops or
-voting, and how the reply is parsed into the final answer. Check each against
-the paper's method section.
+### 4. Mechanisms in code
 
-### 5. Fixed values
+For each `mechanisms` label you confirmed in step 1, find the place in
+`interface.py` that does it. Walk the flow the paper describes — preprocessing,
+then what context the model sees, then how many model calls in what order, then
+how the reply is parsed — and check that the code does the same steps, in the
+same order, with the same number of calls, and with the same values wherever
+the paper states one (a rate, a threshold, a shot count, a generation setting).
 
-Constants the paper states explicitly — sampling rates, thresholds, shot counts,
-decimal precision, window lengths, band edges. Find each one in the code and
-confirm the value. These are the most common place for a silent mismatch.
+### 5. Wrap up
 
-### 6. Differences handled
+Anything from steps 1–4 that did not match is either fixed in your pull request
+or explained in the record. Then: add the record, open the PR, and after it
+merges move the issue's card on the Project board to **Done**.
 
-Anything from steps 1–5 that did not match is either **fixed in your pull
-request** or **explained in the record's `note`**. A difference is fine when
-there is a reason (the resource is unavailable, the step is outside what a
-runtime harness can do); it just has to be written down.
-
-### 7. Record + PR
-
-Generate the review record and open the pull request. See below.
-
-## Verdict
-
-Two options:
-
-`confirmed`
-: You compared the paper and the code and changed nothing.
-
-`updated`
-: You changed something in this pull request. Say what in the `note`, or let
-  the diff speak.
+## When you are not sure
 
 Not sure whether something is a problem, or whether a paper step belongs in a
 runtime harness at all? **Ask in Slack.** Then write the conclusion in the pull
 request so the next person can find it.
 
-Paper anchors (a section, figure, or table) are welcome in the `note` when they
-help the next reader. They are not required.
-
 ## The review record
 
-One file per reference, at the repository root:
+One free-form Markdown file per reference, at the repository root:
 
 ```text
-reviews/<interface_id>/<reference_id>.yaml
+reviews/<interface_id>/<reference_id>.md
 ```
 
-Not beside `harness.py`. A reference directory holds exactly `harness.py` and
-`reference.yaml` — the protocol allows no other file there — so review records
-mirror the tree from a sibling root.
+Not beside `harness.py` — a reference directory holds exactly `harness.py` and
+`reference.yaml`, and the protocol allows no other file there.
 
-Generate it; do not type it by hand:
+Scaffold it, then edit the Notes section freely:
 
 ```bash
 python scripts/review/new_review.py <interface_id>/<reference_id> \
-    --reviewer <your github handle> --verdict confirmed
+    --reviewer <your github handle> --issue <N>
 ```
 
-Add `--note "..."` if you have something to say, and `--verdict updated` if you
-changed code. The script writes the date and the hashes of the two files you
-read, so a later change to either file makes the record visibly stale.
-
-The exact fields are documented in the code repository at
+The scaffold has three header lines (reviewer, date, issue), a Notes section, and an invisible comment holding the hashes of the two files you read.
+The exact shape is in the code repository at
 [`docs/REVIEWING.md`](https://github.com/diamond264/sensorharness/blob/main/docs/REVIEWING.md).
 
-## Pull request and second review
+## Pull request, second review, Done
 
 Open one pull request per issue containing the record and any code change.
 Put this line in the description so the issue closes on merge:
@@ -141,14 +113,18 @@ A second person approves before merge. They read your record and your diff —
 not the paper again — and check that every difference you found has either a
 fix or a reason. One approval is enough.
 
+After the merge, move the issue's card on the Project board to **Done**
+(Project → find your issue → Status). If the board's workflows are on, closing
+the issue does this automatically; check either way.
+
 ## Where information belongs
 
 | Information | Home |
 | --- | --- |
-| Reviewer assignment and project-wide status | Project spreadsheet |
+| Reviewer assignment and project-wide status | Project spreadsheet and the Project board |
 | How to review | This documentation |
 | Paper, files, and checklist for one assignment | GitHub Issue |
-| Per-reference review record | `reviews/<interface_id>/<reference_id>.yaml` |
+| Per-reference review record | `reviews/<interface_id>/<reference_id>.md` |
 | Record format | [`docs/REVIEWING.md`](https://github.com/diamond264/sensorharness/blob/main/docs/REVIEWING.md) in the code repository |
 | Corrections, discussion, and approval | Pull request |
 | Questions and quick coordination | Slack |
