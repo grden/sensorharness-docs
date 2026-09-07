@@ -36,12 +36,19 @@ partial review; say so in the record.
 Open `card.yaml` and `reference.yaml`. Read the paper's abstract and the
 overview of its method.
 
-- The card's `description` and every `mechanisms` label describe what this
-  paper actually does. Two failure modes: a label the paper does not support
-  (invented), or a major step of the paper that no label covers (missing).
-- The reference card's paper title and link are right. Its `modalities` and
-  `tasks` are exactly what the paper demonstrated — no extra modality the paper
-  never used, no task it never evaluated.
+The card describes the **general** algorithm — the reusable information and
+control flow — independently of any one sensor or task. It will not mention
+this paper's ECG or accelerometer, and that is correct. What to check is that
+the paper's method is an instance of it:
+
+- every `mechanisms` label is something the paper's method does (a label the
+  paper does not support is invented);
+- no major step of the paper's inference path is missing from the card.
+
+The reference card is about this paper only: the title and link are right, its
+`description` states what this paper demonstrated, and `modalities` and `tasks`
+list exactly what the paper demonstrated — no extra modality the paper never
+used, no task it never evaluated.
 
 ### 2. Inputs
 
@@ -51,11 +58,21 @@ and `harness.py` read the streams — the stream names, any assumed shape
 (`[samples]` or `[samples, channels]`), any hard-coded rate or window. Same
 signals, rate and window, or a written reason why not.
 
+The harness receives **one already-cut window**. Loading files, segmenting a
+recording into windows, and assigning labels happen outside it, so do not flag
+their absence. A selection *inside* the window — keeping only the last five
+seconds, dropping a channel — is part of the harness and must match the paper.
+
 ### 3. Task & answer
 
-The task wording, the label set, and the answer format the model is asked for
-match the paper's setup. Check the prompt text the interface builds against the
-paper's task description or prompt figure.
+The task wording and the label set are **not** written into the harness: they
+arrive at run time in `SensorInput.task`, so that the same harness can serve a
+different task. Check that the prompt the interface builds actually uses that
+task text and those labels rather than hard-coding the paper's own.
+
+Then check what the paper does fix: the answer format the model is asked for
+(a bare label, a JSON object, a number, a sequence) and any paper-specific
+instructions — role text, output rules — match the paper's prompt or figure.
 
 ### 4. Mechanisms in code
 
@@ -65,6 +82,15 @@ then what context the model sees, then how many model calls in what order, then
 how the reply is parsed — and check that the code does the same steps, in the
 same order, with the same number of calls, and with the same values wherever
 the paper states one (a rate, a threshold, a shot count, a generation setting).
+
+Anything the paper's method needs from outside — an example pool, a retriever,
+a knowledge base, a checkpoint, a tool — must be a constructor resource of the
+harness, not loaded or hard-coded inside it.
+
+If the flow itself differs from the paper — an extra loop, a different call
+order, a different parser — that is a finding. Say so in the record; the
+reference may belong in a different interface, and that decision is for the
+team, not the reviewer alone.
 
 ### 5. Wrap up
 
