@@ -52,57 +52,62 @@ used, no task it never evaluated.
 
 ### 2. Inputs
 
-Find the paper's data or experimental-setup section: which signals, in what
-units, at what sampling rate, over what window. Then find where `interface.py`
-and `harness.py` read the streams — the stream names, any assumed shape
-(`[samples]` or `[samples, channels]`), any hard-coded rate or window. Same
-signals, rate and window, or a written reason why not.
+**Sensor data.** Find the paper's data and setup description: what sensor
+signals or representations are used, how they are collected or prepared, and
+any required format, resolution, sampling rate, or window length. Check that
+`reference.yaml` describes the modality correctly. Then trace how
+`interface.py` and the reference `harness.py` receive the data — through
+`SensorInput.sensor_data` (streams, features, images) or through a constructor
+resource (a query tool, a retriever). Assuming the paper's expected input is
+supplied, check that the implemented logic processes it correctly. Loading
+datasets, segmenting recordings, and assigning labels may happen outside the
+harness and should not be flagged unless the paper requires them inside the
+inference flow.
 
-The harness receives **one already-cut window**. Loading files, segmenting a
-recording into windows, and assigning labels happen outside it, so do not flag
-their absence. A selection *inside* the window — keeping only the last five
-seconds, dropping a channel — is part of the harness and must match the paper.
+**Task.** Identify the problem the paper asks the LLM to solve and check that
+`reference.yaml.tasks` describes it accurately. `SensorInput.task` carries the
+runtime task — the clinical context, the question, the answer options. Check
+that the interface preserves and uses it rather than replacing it with an
+unrelated hard-coded task. Paper-specific fixed wording may remain in the
+reference harness when the paper requires it.
 
-### 3. Task & answer
+### 3. Answer
 
-The task wording and the label set are **not** written into the harness: they
-arrive at run time in `SensorInput.task`, so that the same harness can serve a
-different task. Check that the prompt the interface builds actually uses that
-task text and those labels rather than hard-coding the paper's own.
-
-Then check what the paper does fix: the answer format the model is asked for
-(a bare label, a JSON object, a number, a sequence) and any paper-specific
-instructions — role text, output rules — match the paper's prompt or figure.
+Check that the inherited `run()` returns a `HarnessOutput`. Verify that the
+answer form requested from the model — free text, bare label, JSON, number, or
+sequence — matches the paper. Any paper-specific role text, answer options,
+output rules, and parsing behavior should also match. If the paper does not
+define an exact parser or schema, record the implementation choice as an
+**adaptation** rather than presenting it as paper-specified.
 
 ### 4. Mechanisms in code
 
-For each `mechanisms` label you confirmed in step 1, find the place in
-`interface.py` that does it. Walk the flow the paper describes — preprocessing,
-then what context the model sees, then how many model calls in what order, then
-how the reply is parsed — and check that the code does the same steps, in the
-same order, with the same number of calls, and with the same values wherever
-the paper states one (a rate, a threshold, a shot count, a generation setting).
-
-Anything the paper's method needs from outside — an example pool, a retriever,
-a knowledge base, a checkpoint, a tool — must be a constructor resource of the
-harness, not loaded or hard-coded inside it.
-
-If the flow itself differs from the paper — an extra loop, a different call
-order, a different parser — that is a finding. Say so in the record; the
-reference may belong in a different interface, and that decision is for the
-team, not the reviewer alone.
+For every `mechanisms` label from step 1, find the corresponding logic in
+`interface.py`: representation or preprocessing → context and prompt
+construction → model call(s) → output handling. Check the same major steps,
+order, number of calls, and fixed values stated by the paper. Anything required
+from outside — a model, an image provider, an example pool, a retriever, a
+knowledge base, a checkpoint, a tool — must be a constructor resource rather
+than secretly loaded or hard-coded. If the flow differs materially, record it;
+the reference may require another interface.
 
 ### 5. Wrap up
 
-Anything from steps 1–4 that did not match is either fixed in your pull request
-or explained in the record. Then: add the record, open the PR, and after it
-merges move the issue's card on the Project board to **Done**.
+Fix clear mismatches, or document why a difference is an intentional
+adaptation. Add the record, state the conclusion clearly in the pull request
+with `Closes #<issue>`, and after it merges move the issue's Project card to
+**Done**.
+
+An **adaptation** is a deliberate difference from the paper: something the
+paper leaves unspecified (a parser, an output schema, a tie-break), or
+something the runtime cannot do as published. Written down in the record with
+its reason, it is not a defect. Left unwritten, it is.
 
 ## When you are not sure
 
-Not sure whether something is a problem, or whether a paper step belongs in a
-runtime harness at all? **Ask in Slack.** Then write the conclusion in the pull
-request so the next person can find it.
+Not sure about a paper detail, or whether a paper step belongs in a runtime
+harness at all? **Ask in Slack.** Then record the uncertainty in the review and
+the pull request so the next person can find it.
 
 ## The review record
 
