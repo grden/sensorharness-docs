@@ -322,10 +322,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#start-with-your-assignment" class="md-nav__link">
+  <a href="#what-is-sensorharness" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start with your assignment
+        What is SensorHarness?
       
     </span>
   </a>
@@ -333,10 +333,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-the-relevant-files-fit-together" class="md-nav__link">
+  <a href="#project-structure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How the relevant files fit together
+        Project structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Project structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Framework
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#harness-corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Harness corpus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experiments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiments
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime interface
       
     </span>
   </a>
@@ -344,10 +394,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-the-documentation-locally" class="md-nav__link">
+  <a href="#install-the-project" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run the documentation locally
+        Install the project
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the tests
       
     </span>
   </a>
@@ -418,10 +479,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#start-with-your-assignment" class="md-nav__link">
+  <a href="#what-is-sensorharness" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start with your assignment
+        What is SensorHarness?
       
     </span>
   </a>
@@ -429,10 +490,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-the-relevant-files-fit-together" class="md-nav__link">
+  <a href="#project-structure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How the relevant files fit together
+        Project structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Project structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Framework
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#harness-corpus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Harness corpus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experiments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiments
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime interface
       
     </span>
   </a>
@@ -440,10 +551,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-the-documentation-locally" class="md-nav__link">
+  <a href="#install-the-project" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run the documentation locally
+        Install the project
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the tests
       
     </span>
   </a>
@@ -479,77 +601,101 @@
 
 
 <h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
+<h2 id="what-is-sensorharness">What is SensorHarness?<a class="headerlink" href="#what-is-sensorharness" title="Permanent link">&para;</a></h2>
 <p>SensorHarness is a research codebase for representing, comparing, and
-optimizing how language models and agents solve sensing tasks. Its harnesses
-capture the inference-time procedure around a model: how sensor evidence is
-prepared, what context the model receives, how the model is called, and how its
-answer is interpreted.</p>
-<p>The current contributor workflow turns AI-generated implementations into
-reviewed, paper-backed code:</p>
-<div class="highlight"><pre><span></span><code>Source paper
-    ↓
-AI-generated harness
-    ↓
-Human review and corrections
-    ↓
-review.yaml and pull request
-    ↓
-Second review and merge
+optimizing the ways language models and agents solve sensing tasks. It builds on
+Stanford IRIS Lab's
+<a href="https://github.com/stanford-iris-lab/meta-harness">Meta-Harness</a> and adds a
+sensor-specific domain contract, typed resource resolution, and a
+paper-derived harness corpus.</p>
+<p>In this project, a <strong>harness</strong> is the inference-time procedure around one or
+more language or multimodal models. It controls how sensor observations are
+processed or represented, what examples, knowledge, retrieval results, or tools
+are provided, how models are called, and how the answer is parsed.</p>
+<p>The paper-derived corpus stores reusable interfaces and paper-backed reference
+implementations. The optimizer can retrieve these designs and specialize them
+for a new sensing task.</p>
+<h2 id="project-structure">Project structure<a class="headerlink" href="#project-structure" title="Permanent link">&para;</a></h2>
+<p>The repository separates framework code, paper-backed harnesses, experiments,
+and tests:</p>
+<div class="highlight"><pre><span></span><code>sensorharness/
+├── src/sensor_harness/   # Runtime types, loading, resources, and optimization
+├── harnesses/           # Reusable interfaces and paper-backed references
+├── experiments/         # Task definitions, configurations, and evaluators
+├── tests/               # Automated tests
+└── docs/                # Technical documentation in the code repository
 </code></pre></div>
-<p>An implementation can be both <strong>AI-generated</strong> and <strong>paper-backed</strong>. The first
-term describes how its draft was produced; the second describes the evidence it
-is expected to reproduce faithfully.</p>
-<h2 id="start-with-your-assignment">Start with your assignment<a class="headerlink" href="#start-with-your-assignment" title="Permanent link">&para;</a></h2>
-<p>Review assignments are tracked in GitHub Issues. Your issue identifies:</p>
-<ul>
-<li>the paper of record;</li>
-<li>the interface and reference implementation in scope;</li>
-<li>the expected location of <code>review.yaml</code>; and</li>
-<li>the issue number your pull request should close.</li>
-</ul>
-<p>Read the <a href="reviewing/">Reviewing a Harness</a> guide before editing code. If
-the paper, scope, or expected deliverable is missing or unclear, ask in Slack so
-the assignment can be clarified in GitHub. Important decisions should not live
-only in chat.</p>
-<h2 id="how-the-relevant-files-fit-together">How the relevant files fit together<a class="headerlink" href="#how-the-relevant-files-fit-together" title="Permanent link">&para;</a></h2>
-<p>An assigned review commonly spans an interface and one paper-specific
-reference:</p>
+<h3 id="framework">Framework<a class="headerlink" href="#framework" title="Permanent link">&para;</a></h3>
+<p><code>src/sensor_harness/</code> provides the common runtime. It defines sensor inputs,
+harness outputs, model and resource contracts, file loading, validation, and the
+optimization workflow.</p>
+<h3 id="harness-corpus">Harness corpus<a class="headerlink" href="#harness-corpus" title="Permanent link">&para;</a></h3>
+<p><code>harnesses/</code> contains inference procedures derived from research papers. Each
+top-level folder represents one reusable algorithm:</p>
 <div class="highlight"><pre><span></span><code>harnesses/&lt;interface_id&gt;/
-├── interface.py
 ├── card.yaml
+├── interface.py
 └── references/&lt;reference_id&gt;/
-    ├── harness.py
     ├── reference.yaml
-    └── review.yaml        # added by the reviewer
+    └── harness.py
 </code></pre></div>
+<p>The four files have different purposes:</p>
+<p><code>card.yaml</code>
+: Briefly describes the reusable algorithm and names its main mechanisms.</p>
 <p><code>interface.py</code>
-: Owns reusable behavior such as input checks, preprocessing, prompt assembly,
-  model calls, and output handling.</p>
-<p><code>harness.py</code>
-: Supplies the narrow paper- or task-specific hooks and reported constants for
-  one reference.</p>
+: Implements the reusable algorithm, including its processing steps, prompt
+  construction, model calls, and output handling.</p>
 <p><code>reference.yaml</code>
-: Identifies the source paper and the modalities and tasks demonstrated by that
-  reference.</p>
-<p><code>review.yaml</code>
-: Records the human paper-to-code review. Its schema is still being finalized;
-  use the format supplied by the project coordinator for your assigned review.</p>
-<p>The issue defines the exact scope. Review both files when both the interface and
-reference are listed: a paper-fidelity problem can be in shared interface
-behavior or in a reference-specific choice.</p>
-<h2 id="run-the-documentation-locally">Run the documentation locally<a class="headerlink" href="#run-the-documentation-locally" title="Permanent link">&para;</a></h2>
-<p>From the documentation repository root:</p>
+: Identifies one source paper and records the sensor modalities and tasks that
+  the paper demonstrated. This is metadata, not executable code.</p>
+<p><code>harness.py</code>
+: Supplies the paper-specific details required by the interface, such as fixed
+  constants or sensor preparation rules.</p>
+<p>One interface folder can contain several references. They use the same general
+algorithm from <code>interface.py</code> but provide different paper- or task-specific
+details in their own <code>harness.py</code> files.</p>
+<h3 id="experiments">Experiments<a class="headerlink" href="#experiments" title="Permanent link">&para;</a></h3>
+<p><code>experiments/</code> defines the target tasks used to evaluate and optimize harnesses.
+An experiment specifies the available data and resources, evaluation rules, run
+configuration, and metrics. These task-specific rules do not belong in the
+paper corpus.</p>
+<h2 id="runtime-interface">Runtime interface<a class="headerlink" href="#runtime-interface" title="Permanent link">&para;</a></h2>
+<p>Every concrete harness follows the same basic API:</p>
+<div class="highlight"><pre><span></span><code><span class="n">output</span> <span class="o">=</span> <span class="n">harness</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">SensorInput</span><span class="p">(</span>
+        <span class="n">sensor_data</span><span class="o">=</span><span class="n">sensor_record</span><span class="p">,</span>
+        <span class="n">task</span><span class="o">=</span><span class="s2">"Classify the activity."</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">prediction</span><span class="p">)</span>
+</code></pre></div>
+<p><code>SensorInput</code> contains the sensor data and the task for one example.
+<code>HarnessOutput</code> contains the prediction and a status describing whether the run
+completed or failed during input validation, model execution, or output parsing.</p>
+<p>A harness may require models, retrievers, example pools, or other external
+resources. These resources are supplied when the harness is constructed rather
+than loaded secretly during <code>run()</code>.</p>
+<h2 id="install-the-project">Install the project<a class="headerlink" href="#install-the-project" title="Permanent link">&para;</a></h2>
+<p>SensorHarness requires Python 3.11 or newer. From the repository root:</p>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
 <span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
-python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-mkdocs<span class="w"> </span>serve
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s1">'.[dev]'</span>
 </code></pre></div>
-<p>Open the local address printed by MkDocs. The development server reloads when a
-documentation file changes.</p>
-<p>This prototype currently documents the harness-review workflow only. Broader
-contribution guidance will be added before the project opens to external
-contributors.</p>
+<p>On Windows PowerShell, activate the environment with:</p>
+<div class="highlight"><pre><span></span><code><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre></div>
+<h2 id="run-the-tests">Run the tests<a class="headerlink" href="#run-the-tests" title="Permanent link">&para;</a></h2>
+<p>Run the full test suite and static checks from the repository root:</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest
+ruff<span class="w"> </span>check<span class="w"> </span>.
+</code></pre></div>
+<p>Individual experiments have their own data and model requirements. Read the
+README inside the relevant <code>experiments/&lt;name&gt;/</code> folder before running one.</p>
+<p>To compare a paper with its harness implementation, continue to
+<a href="reviewing/">Reviewing a Harness</a>.</p>
 
 
 
